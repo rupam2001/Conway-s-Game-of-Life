@@ -6,19 +6,39 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>Game of life</title>
 </head>
 
 <body>
+    <div class="info-box">
+        <p id="gen"> </p>
+    </div>
     <div>
         <div class="main">
-            <canvas id="playground"></canvas>
+            <canvas id="playground" title="click to alive the cell"></canvas>
         </div>
         <div class="control-box">
-            <button id="stop">Stop</button>
-            <button id="start">Start</button>
-            <button id="reset">Reset</button>
+            <!-- <button id="stop">Stop</button>
+            <button id="start">Start</button> -->
+            <button id="start">
+                <i class="fa fa-play" aria-hidden="true" id="play-icon" title="play/pause"></i>
+            </button>
+            <!-- <button id="reset">
+                <i class="fa fa-retweet" aria-hidden="true" title="reset" id="reset"></i>
+            </button> -->
         </div>
+        <div class="control-box">
+            <div class="slider-box">
+                <p>Speed: </p>
+                <input type="range" id="speed">
+            </div>
+        </div>
+    </div>
+    <div class="right-box">
+
     </div>
     <script src="main.js"></script>
     <script src="index.js"></script>

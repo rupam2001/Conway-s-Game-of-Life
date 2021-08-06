@@ -1,6 +1,16 @@
 function main() {
     const canvas = document.getElementById('playground');
-    const CANVAS = {
+    this.ctx = canvas.getContext("2d");
+
+    this.isLooping = false
+
+    this.loop_t = null;
+    this.speed_min_mili = 15000
+    this.speed = 50
+
+    this.gen = 0;
+
+    this.CANVAS = {
         width: 2000,
         height: 2000,
         canvas: canvas,
@@ -8,182 +18,194 @@ function main() {
         gridDims: {
             width: 20,
             height: 20
+        },
+        gridOutlineColor: "rgb(46, 56, 63)",
+        gridOulineWidth: "2",
+        gridFillColor: "black"
+    }
+
+    this.CANVAS.canvas.height = this.CANVAS.height;
+    this.CANVAS.canvas.width = this.CANVAS.width;
+
+    this.ctx.fillStyle = this.CANVAS.bgColor;
+    this.ctx.fillRect(0, 0, this.CANVAS.width, this.CANVAS.height);
+
+    this.numrows = parseInt(this.CANVAS.height / this.CANVAS.gridDims.height);
+    this.numcols = parseInt(this.CANVAS.width / this.CANVAS.gridDims.width);
+
+    this.getGridMatrix = function (row, col) {
+        let _grid = [];
+
+        for (let i = 0; i < row; i++) {
+            let arow = []
+            for (let j = 0; j < col; j++)
+                arow.push(0);
+            _grid.push(arow);
         }
+        return _grid;
     }
 
 
 
 
-    let ctx = canvas.getContext("2d");
+    this.grid = getGridMatrix(this.numrows, this.numcols);
 
-    setDims(CANVAS);
+    this.drawGrid = (pos = { x: -1, y: -1 }) => {
+        for (let i = 0; i < this.numrows; i++) {
+            for (let j = 0; j < this.numcols; j++) {
 
-    ctx.fillStyle = CANVAS.bgColor;
-    ctx.fillRect(0, 0, CANVAS.width, CANVAS.height);
+                let x = j * this.CANVAS.gridDims.width;
+                let y = i * this.CANVAS.gridDims.height;
 
-    const numrows = parseInt(CANVAS.height / CANVAS.gridDims.height);
-    const numcols = parseInt(CANVAS.width / CANVAS.gridDims.width);
+                let ax, bx, cx, dx;
+                let ay, by, cy, dy;
 
-    const gridMatrix = getGridMatrix(numrows, numcols);
+                ax = x; ay = y;
+                bx = x + this.CANVAS.gridDims.width;; by = y;
+                cx = x + this.CANVAS.gridDims.width; cy = y + this.CANVAS.gridDims.height;
+                dx = x; dy = y + this.CANVAS.gridDims.height;
 
 
-    drawGrid(numrows, numcols, { x: -1, y: -1 }, CANVAS.gridDims, ctx, gridMatrix)
+                this.ctx.beginPath();
+                this.ctx.lineWidth = this.CANVAS.gridOulineWidth;
+                this.ctx.strokeStyle = this.CANVAS.gridOutlineColor;
+
+                if ((pos.x > ax && pos.x < bx && pos.y > ay && pos.y < cy) && this.grid[i][j] == 1) {
+                    this.grid[i][j] = 0;
+                    drawGrid({ x: -1, y: -1 });
+                    return
+                }
+                else if ((pos.x > ax && pos.x < bx && pos.y > ay && pos.y < cy)) {
+                    //clicked
+                    this.grid[i][j] = 1;
+                    this.ctx.fillStyle = this.CANVAS.gridFillColor;
+                    this.ctx.fillRect(x, y, this.CANVAS.gridDims.width, this.CANVAS.gridDims.height)
+                }
+                else if (this.grid[i][j] == 1) {
+
+                    this.ctx.fillStyle = this.CANVAS.gridFillColor;
+                    this.ctx.fillRect(x, y, this.CANVAS.gridDims.width, this.CANVAS.gridDims.height)
+                }
+                else {
+                    this.ctx.rect(this.CANVAS.gridDims.width, this.CANVAS.gridDims.height, x, y);
+                    this.ctx.stroke();
+                }
+            }
+        }
+    }
+
+
+    this.drawGrid({ x: -1, y: -1 })
+
+
+    this.copyGrid = function (g) {
+        let _grid = [];
+        for (let i = 0; i < g.length; i++) {
+            let arow = []
+            for (let j = 0; j < g[0].length; j++)
+                arow.push(g[i][j]);
+            _grid.push(arow);
+        }
+        return _grid;
+    }
+
+    this.checkIfAlive = (i, j) => {
+        const s =
+            ((i - 1) >= 0 && (j - 1) >= 0 ? this.grid[(i - 1)][(j - 1)] : 0)
+            + ((i - 1) >= 0 ? this.grid[(i - 1)][j] : 0)
+            + ((i - 1) >= 0 && (j + 1) < this.numcols ? this.grid[(i - 1)][(j + 1)] : 0)
+            + ((j + 1) < this.numcols ? this.grid[i][(j + 1)] : 0)
+            + ((i + 1) < this.numrows && (j + 1) < this.numcols ? this.grid[(i + 1)][(j + 1)] : 0)
+            + ((i + 1) < this.numrows ? this.grid[(i + 1)][j] : 0)
+            + ((i + 1) < this.numrows && (j - 1) >= 0 ? this.grid[(i + 1)][(j - 1)] : 0)
+            + ((j - 1) >= 0 ? this.grid[i][(j - 1)] : 0)
+
+        if (this.grid[i][j] == 1) return s == 2 || s == 3
+        return s == 3
+    }
+
+
+    this.gridOperation = () => {
+        let res_grid = this.copyGrid(this.grid)
+        for (let i = 0; i < this.grid.length; i++) {
+            for (let j = 0; j < this.grid[0].length; j++) {
+                const alive = this.checkIfAlive(i, j);
+                if (alive) {
+                    res_grid[i][j] = 1;
+                } else {
+                    res_grid[i][j] = 0;
+                }
+            }
+        }
+        return res_grid
+    }
+
+
+    this.gameLoop = () => {
+
+        const loop_speed = this.speed_min_mili / this.speed
+        this.loop_t = setInterval(() => {
+
+            this.gen++;
+
+            ctx.clearRect(0, 0, this.CANVAS.width, this.CANVAS.height);
+
+            this.grid = gridOperation()
+
+            drawGrid({ x: -1, y: -1 });
+
+            document.getElementById('gen').innerHTML = `Generation: <br/>  <span>${this.gen}</span>`
+
+        }, loop_speed);
+    }
 
     canvas.addEventListener('mousedown', (e) => {
         let pos = getMousePosition(canvas, e);
-        ctx.clearRect(0, 0, CANVAS.width, CANVAS.height);
-        drawGrid(numrows, numcols, pos, CANVAS.gridDims, ctx, gridMatrix);
+        ctx.clearRect(0, 0, this.CANVAS.width, this.CANVAS.height);
+        this.drawGrid(pos);
     })
 
-    window.addEventListener('keyup', (e) => {
-        if (e.keyCode === 13) {
-            loop(ctx, CANVAS, numrows, numcols, gridMatrix, 600);
+    document.getElementById("start").addEventListener('click', (e) => {
+        if (!this.isLooping) {
+            //start it
+            this.gameLoop()
+            this.isLooping = true
+            document.getElementById("play-icon").classList.remove("fa-play")
+            document.getElementById("play-icon").classList.add("fa-pause")
+        } else {
+            //stop it
+            clearInterval(this.loop_t)
+            this.isLooping = false;
+            document.getElementById("play-icon").classList.remove("fa-pause")
+            document.getElementById("play-icon").classList.add("fa-play")
         }
     })
 
-}
-
-
-function loop(ctx, CANVAS, numrows, numcols, grid, speed) {
-    let counter = 0;
-    const t = setInterval(() => {
-
-        ctx.clearRect(0, 0, CANVAS.width, CANVAS.height);
-
-        grid = gridOperation(grid)
-
-        drawGrid(numrows, numcols, { x: -1, y: -1 }, CANVAS.gridDims, ctx, grid);
-
-        counter++;
-        if (counter >= 10) {
-            // alert("stoped");
-            clearInterval(t);
+    document.getElementById("stop").addEventListener('click', (e) => {
+        if (this.isLooping) {
+            clearInterval(this.loop_t)
+            this.isLooping = false;
         }
-        console.log(counter);
-
-
-    }, speed);
-}
-
-function multiplyMatrixElemWise(m1, m2) {
-    let numrows = m1.length;
-    let numcols = m1[0].length;
-
-    let m3 = [...m1];
-
-    for (let i = 0; i < numrows; i++) {
-        for (let j = 0; j < numcols; j++) {
-            if (m3[i][j] == 0) {
-                m3[i][j] += m2[i][j];
-            } else {
-                m3[i][j] *= m2[i][j];
-            }
+    })
+    document.getElementById("reset").addEventListener('click', (e) => {
+        window.location.reload()
+        if (this.isLooping) {
+            clearInterval(this.loop_t)
+            this.isLooping = false;
         }
-    }
-    return m3;
+        grid = this.getGridMatrix(this.numrows, this.numcols);
+        drawGrid({ x: -1, y: -1 })
+    })
+
+    document.getElementById('speed').addEventListener('change', (e) => {
+        console.log(e.target.value)
+        // alert(this.speed)
+        this.speed = e.target.value
+        // document.getElementById("speed_slider").title = e.target.value
+    })
 }
 
 
-function gridOperation(grid) {
-    let res_grid = copyGrid(grid)
-    for (let i = 0; i < grid.length; i++) {
-        for (let j = 0; j < grid[0].length; j++) {
-            const alive = checkIfAlive(grid, i, j);
-            if (alive) {
-                res_grid[i][j] = 1;
-            } else {
-                res_grid[i][j] = 0;
-            }
-        }
-    }
-    return res_grid
-}
-
-function copyGrid(g) {
-    let grid = [];
-    for (let i = 0; i < g.length; i++) {
-        let arow = []
-        for (let j = 0; j < g[0].length; j++)
-            arow.push(g[i][j]);
-        grid.push(arow);
-    }
-    return grid;
-}
-
-function checkIfAlive(grid, i, j) {
-
-    const numcols = grid[0].length
-    const numrows = grid.length
-    //check for alive
-    // if (grid[i][j] == 1) {
-    //     const sum =
-    //         ((i + 1) < numrows ? grid[(i + 1)][(j)] : 0)
-    //         + ((j - 1) >= 0 ? grid[i][(j - 1)] : 0)
-    //         + ((i - 1) >= 0 ? grid[(i - 1)][j] : 0)
-    //         + ((j + 1) < numcols ? grid[i][(j + 1)] : 0)
-
-    //     return sum >= 2;
-    // }
-
-    //check for born
-    const s =
-        ((i - 1) >= 0 && (j - 1) >= 0 ? grid[(i - 1)][(j - 1)] : 0)
-        + ((i - 1) >= 0 ? grid[(i - 1)][j] : 0)
-        + ((i - 1) >= 0 && (j + 1) < numcols ? grid[(i - 1)][(j + 1)] : 0)
-        + ((j + 1) < numcols ? grid[i][(j + 1)] : 0)
-        + ((i + 1) < numrows && (j + 1) < numcols ? grid[(i + 1)][(j + 1)] : 0)
-        + ((i + 1) < numrows ? grid[(i + 1)][j] : 0)
-        + ((i + 1) < numrows && (j - 1) >= 0 ? grid[(i + 1)][(j - 1)] : 0)
-        + ((j - 1) >= 0 ? grid[i][(j - 1)] : 0)
-
-    if (grid[i][j] == 1) return s == 2 || s == 3
-
-    return s == 3
-}
-
-
-function drawGrid(numrows, numcols, pos = { x: -1, y: -1 }, dims = { width: 0, height: 0 }, ctx, grid) {
-    for (let i = 0; i < numrows; i++) {
-        for (let j = 0; j < numcols; j++) {
-
-            let x = j * dims.width;
-            let y = i * dims.height;
-
-            let ax, bx, cx, dx;
-            let ay, by, cy, dy;
-
-            ax = x; ay = y;
-            bx = x + dims.width; by = y;
-            cx = x + dims.width; cy = y + dims.height
-            dx = x; dy = y + dims.height;
-
-
-            ctx.beginPath();
-            ctx.lineWidth = "2";
-            ctx.strokeStyle = "rgb(46, 56, 63)";
-            if ((pos.x > ax && pos.x < bx && pos.y > ay && pos.y < cy) && grid[i][j] == 1) {
-                grid[i][j] = 0;
-                drawGrid(numrows, numcols, { width: -1, height: -1 }, dims, ctx, grid);
-                return
-            }
-            else if ((pos.x > ax && pos.x < bx && pos.y > ay && pos.y < cy)) {
-                //clicked
-                grid[i][j] = 1;
-                ctx.fillStyle = "black";
-                ctx.fillRect(x, y, dims.width, dims.height)
-            }
-            else if (grid[i][j] == 1) {
-
-                ctx.fillStyle = "black";
-                ctx.fillRect(x, y, dims.width, dims.height)
-            }
-            else {
-                ctx.rect(dims.width, dims.height, x, y);
-                ctx.stroke();
-            }
-        }
-    }
-}
 
 function getMousePosition(canvas, event) {
     let rect = canvas.getBoundingClientRect();
@@ -191,57 +213,6 @@ function getMousePosition(canvas, event) {
     let y = event.clientY - rect.top;
     return { x, y };
 }
-
-
-function getGridMatrix(row, col) {
-    let grid = [];
-
-    for (let i = 0; i < row; i++) {
-        let arow = []
-        for (let j = 0; j < col; j++)
-            arow.push(0);
-        grid.push(arow);
-    }
-    return grid;
-}
-
-
-
-
-
-
-
-
-
-function setDims({ width, height, canvas }) {
-    canvas.height = height;
-    canvas.width = width;
-}
-
-
-
-
-
-
-function drawBoard(context, bw, bh) {
-    for (var x = 0; x <= bw; x += 40) {
-        context.strokeStyle = "black";
-        context.moveTo(0.5 + x + p, p);
-        context.lineTo(0.5 + x + p, bh + p);
-        context.stroke();
-    }
-
-    for (var x = 0; x <= bh; x += 40) {
-        context.strokeStyle = "black";
-        context.moveTo(p, 0.5 + x + p);
-        context.lineTo(bw + p, 0.5 + x + p);
-        context.stroke();
-    }
-    // context.strokeStyle = "black";
-    // context.stroke();
-}
-
-
 
 main();
 
