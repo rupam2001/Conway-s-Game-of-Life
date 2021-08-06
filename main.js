@@ -59,14 +59,27 @@ function loop(ctx, CANVAS, numrows, numcols, grid, speed) {
         ctx.clearRect(0, 0, CANVAS.width, CANVAS.height);
 
         //manipulate the grid
-        gridOperation(grid);
+        // let all_grids = []
+        // for (let i = 0; i < grid.length; i++) {
+        //     for (let j = 0; j < grid[0].length; j++) {
+        //         all_grids.push(gridOperation(grid));
+        //     }
+        // }
+        // let result_grid = grid;
+
+        // for (let i = 1; i < all_grids.length; i++) {
+        //     result_grid = multiplyMatrixElemWise(result_grid, all_grids[i]);
+        // }
+
+        // grid = [...result_grid];
+        grid = gridOperation(grid)
 
         drawGrid(numrows, numcols, { x: -1, y: -1 }, CANVAS.gridDims, ctx, grid);
 
 
         counter++;
         if (counter > 10) {
-            alert("stoped");
+            // alert("stoped");
             clearInterval(t);
         }
         console.log(counter);
@@ -75,22 +88,59 @@ function loop(ctx, CANVAS, numrows, numcols, grid, speed) {
     }, speed);
 }
 
+function multiplyMatrixElemWise(m1, m2) {
+    let numrows = m1.length;
+    let numcols = m1[0].length;
+
+    let m3 = [...m1];
+
+    for (let i = 0; i < numrows; i++) {
+        for (let j = 0; j < numcols; j++) {
+            if (m3[i][j] == 0) {
+                m3[i][j] += m2[i][j];
+            } else {
+                m3[i][j] *= m2[i][j];
+            }
+        }
+    }
+    return m3;
+}
 
 
 function gridOperation(grid) {
+    let _grid = [...grid]
+    let all_grids = []
+
+
     for (let i = 0; i < grid.length; i++) {
         for (let j = 0; j < grid[0].length; j++) {
             const alive = checkIfAlive(grid, i, j);
-            if (alive == true) grid[i][j] = 1;
-            else grid[i][j] = 0;
+            if (alive == true)
+                _grid[i][j] = 1;
+            else _grid[i][j] = 0;
+
+            all_grids.push(_grid)
+            _grid = [...grid]
         }
+        _grid = [...grid]
+
     }
+    let result_grid = grid;
+
+    for (let i = 1; i < all_grids.length; i++) {
+        result_grid = multiplyMatrixElemWise(result_grid, all_grids[i]);
+    }
+
+    return result_grid
 }
 
 function checkIfAlive(grid, i, j) {
 
     //check for alive
     if (grid[i][j] == 1) {
+        const sum = grid[i + 1][j - 1] + grid[i][j - 1] + grid[i - 1][j] + grid[i][j + 1]
+        return sum >= 2;
+
         if (j - 1 >= 0 && j + 1 < grid[0].length) {
             if (grid[i][j - 1] == 1 && grid[i][j + 1] == 1) {
                 return true
@@ -105,9 +155,26 @@ function checkIfAlive(grid, i, j) {
     }
 
     //check for born
+    const numcols = grid[0].length
+    const numrows = grid.length
+    const s = (i - 1 >= 0 && j - 1 >= 0 && grid[i - 1][j - 1] == 1)
+        + (i - 1 >= 0 && grid[i - 1][j] == 1)
+        + (i - 1 >= 0 && j + 1 < numcols && grid[i - 1][j + 1] == 1)
+        + (j + 1 < numcols && grid[i][j + 1] == 1)
+        + (i + 1 < numrows && j + 1 < numcols && grid[i + 1][j + 1] == 1)
+        + (i + 1 < numrows && grid[i + 1][j] == 1)
+        + (i + 1 < numrows && j - 1 >= 0 && grid[i + 1][j - 1] == 1)
+        + (j - 1 >= 0 && grid[i][j - 1] == 1)
+
+    // alert(s)
+
+    return s >= 3
+
     //left side
-    if (j - 1 >= 0 && i + 1 < grid.length) {
-        if (grid[i + 1][j - 1] == 1 && grid[i][j - 1] == 1 && grid[i + 1][j - 1] == 1) {
+    if (j - 1 >= 0 && i + 1 < grid.length && i - 1 >= 0) {
+
+
+        if (grid[i - 1][j - 1] == 1 && grid[i][j - 1] == 1 && grid[i + 1][j - 1] == 1) {
             return true;
         }
     }
@@ -118,9 +185,9 @@ function checkIfAlive(grid, i, j) {
         }
     }
 
-    if (j - 1 >= 0 && i + 1 < grid.length) {
+    if (j + 1 < grid[0].length && i + 1 < grid.length && i - 1 >= 0) {
         //right
-        if (grid[i + 1][j - 1] == 1 && grid[i][j - 1] == 1 && grid[i + 1][j - 1] == 1) {
+        if (grid[i - 1][j + 1] == 1 && grid[i][j + 1] == 1 && grid[i + 1][j + 1] == 1) {
             return true;
         }
     }
@@ -150,6 +217,7 @@ function drawGrid(numrows, numcols, pos = { x: -1, y: -1 }, dims = { width: 0, h
             bx = x + dims.width; by = y;
             cx = x + dims.width; cy = y + dims.height
             dx = x; dy = y + dims.height;
+
 
             ctx.beginPath();
             ctx.lineWidth = "0.2";
