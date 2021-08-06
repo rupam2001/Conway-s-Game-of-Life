@@ -6,8 +6,29 @@ body{
     align-items: center;
 }
 .main{
-
+    width: 80vw;
+    height: 80vh;
+    overflow: auto;
 }
 #playground{
-    border: 1px solid grey;
+    /* border: 1px solid grey; */
+}
+.control-box{
+    padding: 1rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+.control-box button{
+    color: black;
+    border: 2px solid black;
+    font-size: larger;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+.control-box button:hover{
+    transform: scale(1.2);
+}
+.control-box button:active{
+    transform: scale(0.8);
 }

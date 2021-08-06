@@ -1,17 +1,17 @@
 function main() {
     const canvas = document.getElementById('playground');
-
-
     const CANVAS = {
-        width: 500,
-        height: 500,
+        width: 2000,
+        height: 2000,
         canvas: canvas,
-        bgColor: "whitesmoke",
+        bgColor: "white",
         gridDims: {
             width: 20,
             height: 20
         }
     }
+
+
 
 
     let ctx = canvas.getContext("2d");
@@ -26,17 +26,8 @@ function main() {
 
     const gridMatrix = getGridMatrix(numrows, numcols);
 
-    //make a way to draw the grid
 
-    for (let i = 0; i < numrows; i++) {
-        for (let j = 0; j < numcols; j++) {
-            ctx.beginPath();
-            ctx.lineWidth = "0.2";
-            ctx.strokeStyle = "black";
-            ctx.rect(CANVAS.gridDims.width, CANVAS.gridDims.height, j * CANVAS.gridDims.width, i * CANVAS.gridDims.height);
-            ctx.stroke();
-        }
-    }
+    drawGrid(numrows, numcols, { x: -1, y: -1 }, CANVAS.gridDims, ctx, gridMatrix)
 
     canvas.addEventListener('mousedown', (e) => {
         let pos = getMousePosition(canvas, e);
@@ -46,7 +37,7 @@ function main() {
 
     window.addEventListener('keyup', (e) => {
         if (e.keyCode === 13) {
-            loop(ctx, CANVAS, numrows, numcols, gridMatrix, 500);
+            loop(ctx, CANVAS, numrows, numcols, gridMatrix, 600);
         }
     })
 
@@ -56,29 +47,15 @@ function main() {
 function loop(ctx, CANVAS, numrows, numcols, grid, speed) {
     let counter = 0;
     const t = setInterval(() => {
+
         ctx.clearRect(0, 0, CANVAS.width, CANVAS.height);
 
-        //manipulate the grid
-        // let all_grids = []
-        // for (let i = 0; i < grid.length; i++) {
-        //     for (let j = 0; j < grid[0].length; j++) {
-        //         all_grids.push(gridOperation(grid));
-        //     }
-        // }
-        // let result_grid = grid;
-
-        // for (let i = 1; i < all_grids.length; i++) {
-        //     result_grid = multiplyMatrixElemWise(result_grid, all_grids[i]);
-        // }
-
-        // grid = [...result_grid];
         grid = gridOperation(grid)
 
         drawGrid(numrows, numcols, { x: -1, y: -1 }, CANVAS.gridDims, ctx, grid);
 
-
         counter++;
-        if (counter > 10) {
+        if (counter >= 10) {
             // alert("stoped");
             clearInterval(t);
         }
@@ -108,98 +85,60 @@ function multiplyMatrixElemWise(m1, m2) {
 
 
 function gridOperation(grid) {
-    let _grid = [...grid]
-    let all_grids = []
-
-
+    let res_grid = copyGrid(grid)
     for (let i = 0; i < grid.length; i++) {
         for (let j = 0; j < grid[0].length; j++) {
             const alive = checkIfAlive(grid, i, j);
-            if (alive == true)
-                _grid[i][j] = 1;
-            else _grid[i][j] = 0;
-
-            all_grids.push(_grid)
-            _grid = [...grid]
+            if (alive) {
+                res_grid[i][j] = 1;
+            } else {
+                res_grid[i][j] = 0;
+            }
         }
-        _grid = [...grid]
-
     }
-    let result_grid = grid;
+    return res_grid
+}
 
-    for (let i = 1; i < all_grids.length; i++) {
-        result_grid = multiplyMatrixElemWise(result_grid, all_grids[i]);
+function copyGrid(g) {
+    let grid = [];
+    for (let i = 0; i < g.length; i++) {
+        let arow = []
+        for (let j = 0; j < g[0].length; j++)
+            arow.push(g[i][j]);
+        grid.push(arow);
     }
-
-    return result_grid
+    return grid;
 }
 
 function checkIfAlive(grid, i, j) {
 
-    //check for alive
-    if (grid[i][j] == 1) {
-        const sum = grid[i + 1][j - 1] + grid[i][j - 1] + grid[i - 1][j] + grid[i][j + 1]
-        return sum >= 2;
-
-        if (j - 1 >= 0 && j + 1 < grid[0].length) {
-            if (grid[i][j - 1] == 1 && grid[i][j + 1] == 1) {
-                return true
-            }
-        }
-        if (i - 1 >= 0 && i + 1 < grid.length) {
-            if (grid[i - 1][j] == 1 && grid[i + 1][j] == 1) {
-                return true
-            }
-        }
-        return false
-    }
-
-    //check for born
     const numcols = grid[0].length
     const numrows = grid.length
-    const s = (i - 1 >= 0 && j - 1 >= 0 && grid[i - 1][j - 1] == 1)
-        + (i - 1 >= 0 && grid[i - 1][j] == 1)
-        + (i - 1 >= 0 && j + 1 < numcols && grid[i - 1][j + 1] == 1)
-        + (j + 1 < numcols && grid[i][j + 1] == 1)
-        + (i + 1 < numrows && j + 1 < numcols && grid[i + 1][j + 1] == 1)
-        + (i + 1 < numrows && grid[i + 1][j] == 1)
-        + (i + 1 < numrows && j - 1 >= 0 && grid[i + 1][j - 1] == 1)
-        + (j - 1 >= 0 && grid[i][j - 1] == 1)
+    //check for alive
+    // if (grid[i][j] == 1) {
+    //     const sum =
+    //         ((i + 1) < numrows ? grid[(i + 1)][(j)] : 0)
+    //         + ((j - 1) >= 0 ? grid[i][(j - 1)] : 0)
+    //         + ((i - 1) >= 0 ? grid[(i - 1)][j] : 0)
+    //         + ((j + 1) < numcols ? grid[i][(j + 1)] : 0)
 
-    // alert(s)
+    //     return sum >= 2;
+    // }
 
-    return s >= 3
+    //check for born
+    const s =
+        ((i - 1) >= 0 && (j - 1) >= 0 ? grid[(i - 1)][(j - 1)] : 0)
+        + ((i - 1) >= 0 ? grid[(i - 1)][j] : 0)
+        + ((i - 1) >= 0 && (j + 1) < numcols ? grid[(i - 1)][(j + 1)] : 0)
+        + ((j + 1) < numcols ? grid[i][(j + 1)] : 0)
+        + ((i + 1) < numrows && (j + 1) < numcols ? grid[(i + 1)][(j + 1)] : 0)
+        + ((i + 1) < numrows ? grid[(i + 1)][j] : 0)
+        + ((i + 1) < numrows && (j - 1) >= 0 ? grid[(i + 1)][(j - 1)] : 0)
+        + ((j - 1) >= 0 ? grid[i][(j - 1)] : 0)
 
-    //left side
-    if (j - 1 >= 0 && i + 1 < grid.length && i - 1 >= 0) {
+    if (grid[i][j] == 1) return s == 2 || s == 3
 
-
-        if (grid[i - 1][j - 1] == 1 && grid[i][j - 1] == 1 && grid[i + 1][j - 1] == 1) {
-            return true;
-        }
-    }
-    if (i - 1 >= 0 && j - 1 >= 0 && j + 1 < grid[0].length) {
-        //up side
-        if (grid[i - 1][j - 1] == 1 && grid[i - 1][j] == 1 && grid[i - 1][j + 1] == 1) {
-            return true;
-        }
-    }
-
-    if (j + 1 < grid[0].length && i + 1 < grid.length && i - 1 >= 0) {
-        //right
-        if (grid[i - 1][j + 1] == 1 && grid[i][j + 1] == 1 && grid[i + 1][j + 1] == 1) {
-            return true;
-        }
-    }
-    if (j - 1 >= 0 && i + 1 < grid.length && j + 1 < grid[0].length) {
-        //bottom
-        if (grid[i + 1][j - 1] == 1 && grid[i + 1][j] == 1 && grid[i + 1][j + 1] == 1) {
-
-            return true;
-        }
-    }
-
-    return false;
+    return s == 3
 }
 
 
@@ -220,24 +159,22 @@ function drawGrid(numrows, numcols, pos = { x: -1, y: -1 }, dims = { width: 0, h
 
 
             ctx.beginPath();
-            ctx.lineWidth = "0.2";
-            ctx.strokeStyle = "black";
+            ctx.lineWidth = "2";
+            ctx.strokeStyle = "rgb(46, 56, 63)";
             if ((pos.x > ax && pos.x < bx && pos.y > ay && pos.y < cy) && grid[i][j] == 1) {
-                // ctx.clearRect(x, y, dims.width, dims.height)
                 grid[i][j] = 0;
                 drawGrid(numrows, numcols, { width: -1, height: -1 }, dims, ctx, grid);
-
+                return
             }
             else if ((pos.x > ax && pos.x < bx && pos.y > ay && pos.y < cy)) {
-
                 //clicked
                 grid[i][j] = 1;
-                ctx.fillStyle = "#FF0000";
+                ctx.fillStyle = "black";
                 ctx.fillRect(x, y, dims.width, dims.height)
             }
             else if (grid[i][j] == 1) {
 
-                ctx.fillStyle = "#FF0000";
+                ctx.fillStyle = "black";
                 ctx.fillRect(x, y, dims.width, dims.height)
             }
             else {
@@ -288,16 +225,20 @@ function setDims({ width, height, canvas }) {
 
 function drawBoard(context, bw, bh) {
     for (var x = 0; x <= bw; x += 40) {
+        context.strokeStyle = "black";
         context.moveTo(0.5 + x + p, p);
         context.lineTo(0.5 + x + p, bh + p);
+        context.stroke();
     }
 
     for (var x = 0; x <= bh; x += 40) {
+        context.strokeStyle = "black";
         context.moveTo(p, 0.5 + x + p);
         context.lineTo(bw + p, 0.5 + x + p);
+        context.stroke();
     }
-    context.strokeStyle = "black";
-    context.stroke();
+    // context.strokeStyle = "black";
+    // context.stroke();
 }
 
 
