@@ -15,3 +15,5 @@
 `
     Made with HTML, CSS and JavaScript (pure vanilla)
 `
+
+# Visit: [Live project](https://rupam2001.github.io/Conway-s-Game-of-Life/)
