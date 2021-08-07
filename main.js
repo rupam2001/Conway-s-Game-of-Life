@@ -1,3 +1,4 @@
+
 function main() {
     const canvas = document.getElementById('playground');
     this.ctx = canvas.getContext("2d");
@@ -160,7 +161,7 @@ function main() {
     }
 
     canvas.addEventListener('mousedown', (e) => {
-        let pos = getMousePosition(canvas, e);
+        let pos = this.getMousePosition(canvas, e);
         ctx.clearRect(0, 0, this.CANVAS.width, this.CANVAS.height);
         this.drawGrid(pos);
     })
@@ -181,38 +182,32 @@ function main() {
         }
     })
 
-    document.getElementById("stop").addEventListener('click', (e) => {
-        if (this.isLooping) {
-            clearInterval(this.loop_t)
-            this.isLooping = false;
-        }
-    })
     document.getElementById("reset").addEventListener('click', (e) => {
-        window.location.reload()
         if (this.isLooping) {
             clearInterval(this.loop_t)
             this.isLooping = false;
         }
         grid = this.getGridMatrix(this.numrows, this.numcols);
+        ctx.clearRect(0, 0, this.CANVAS.width, this.CANVAS.height);
+
         drawGrid({ x: -1, y: -1 })
     })
 
-    document.getElementById('speed').addEventListener('change', (e) => {
-        console.log(e.target.value)
-        // alert(this.speed)
+
+    document.getElementById('speed_slider').addEventListener('change', (e) => {
         this.speed = e.target.value
-        // document.getElementById("speed_slider").title = e.target.value
+        if (this.speed == 0) this.speed = 1
+        document.getElementById("speed_slider").title = e.target.value
     })
+    this.getMousePosition = function getMousePosition(canvas, event) {
+        let rect = canvas.getBoundingClientRect();
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+        return { x, y };
+    }
 }
 
 
-
-function getMousePosition(canvas, event) {
-    let rect = canvas.getBoundingClientRect();
-    let x = event.clientX - rect.left;
-    let y = event.clientY - rect.top;
-    return { x, y };
-}
 
 main();
 

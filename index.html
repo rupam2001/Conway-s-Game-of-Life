@@ -18,22 +18,21 @@
     </div>
     <div>
         <div class="main">
+            <span>John conway's game of life</span>
             <canvas id="playground" title="click to alive the cell"></canvas>
         </div>
         <div class="control-box">
-            <!-- <button id="stop">Stop</button>
-            <button id="start">Start</button> -->
             <button id="start">
                 <i class="fa fa-play" aria-hidden="true" id="play-icon" title="play/pause"></i>
             </button>
-            <!-- <button id="reset">
+            <button id="reset">
                 <i class="fa fa-retweet" aria-hidden="true" title="reset" id="reset"></i>
-            </button> -->
+            </button>
         </div>
         <div class="control-box">
             <div class="slider-box">
                 <p>Speed: </p>
-                <input type="range" id="speed">
+                <input type="range" id="speed_slider" title="50">
             </div>
         </div>
     </div>
@@ -41,7 +40,6 @@
 
     </div>
     <script src="main.js"></script>
-    <script src="index.js"></script>
 </body>
 
 </html>
