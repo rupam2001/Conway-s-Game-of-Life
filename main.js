@@ -189,7 +189,7 @@ function main() {
         }
         grid = this.getGridMatrix(this.numrows, this.numcols);
         ctx.clearRect(0, 0, this.CANVAS.width, this.CANVAS.height);
-
+        this.gen = 0;
         drawGrid({ x: -1, y: -1 })
     })
 
